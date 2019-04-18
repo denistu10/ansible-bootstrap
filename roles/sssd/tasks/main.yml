@@ -1,0 +1,58 @@
+---
+- name: SSSD | Install Package
+  become: true
+  yum:
+    name: "{{ sssd.package }}"
+    state: latest
+  when: sssd.install == 1
+  tags: sssd_install
+
+- name: SSSD | Add server to Active Directory
+  become: true
+  shell: "echo {{ sssd.password }} | realm join -U {{ sssd.user }} {{ sssd.domain }}"
+  when: sssd.install == 1
+  tags: sssd_install
+
+- name: SSSD | Copy sssd.conf 
+  become: true
+  copy:
+    src: sssd.conf
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+  when: sssd.install == 1
+  tags: sssd_install
+  notify: restart sssd
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: SSSD | Update PAM
+  become: true
+  shell: /sbin/authconfig --enablemkhomedir --enablesssdauth --updateall
+  when: sssd.install == 1
+  tags: sssd_install
+
+- name: SSSD | Enable service sssd
+  become: true
+  service:
+    name: "sssd"
+    enabled: yes
+  when: sssd.install == 1
+  tags: sssd_install
+
+- name: SSSD | Setup sudo 
+  become: true
+  copy: 
+    src: dostaevsky
+    dest: /etc/sudoers.d/dostaevsky
+    owner: root 
+    group: root 
+    mode: 0440
+  when: sssd.install == 1
+  tags: sssd_install
+
+- name: flush_handlers
+  meta: flush_handlers

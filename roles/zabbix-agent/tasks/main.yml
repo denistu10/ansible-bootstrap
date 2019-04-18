@@ -1,0 +1,67 @@
+---  
+- name: Zabbix Agent | Install Zabbix agent
+  become: yes
+  yum:
+    name: http://repo.zabbix.com/zabbix/{{ zabbix_agent.zbx_version }}/rhel/7/x86_64/zabbix-agent-{{ zabbix_agent.zbx_version_packet }}.el7.x86_64.rpm
+    state: latest
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-install
+
+# ====
+
+- name: Make sure zabbix-agent is started up
+  become: yes
+  service:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+  notify: restart zabbix-agent
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-install
+
+
+- name: Add config zabbix
+  become: yes
+  template: 
+    src: zabbix_agentd.j2 
+    dest: "/etc/zabbix/zabbix_agentd.conf" 
+    owner: zabbix 
+    group: root 
+    mode: 0664
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-install
+
+- name: Making zabbix_agentd.conf.d dicrectory...
+  become: yes
+  file: 
+    state: directory 
+    dest: "/etc/zabbix/zabbix_agentd.conf.d" 
+    owner: zabbix 
+    group: root 
+    mode: 0755
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-install
+
+- name: Copy default config for agent
+  become: yes
+  template: 
+    src: agent_conf.j2 
+    dest: /etc/zabbix/zabbix_agentd.d/agent.conf 
+    owner: zabbix 
+    group: root 
+    mode: 0664
+  notify: restart zabbix-agent
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-config
+
+- name: Making externalscripts dicrectory...
+  become: yes
+  file: 
+    state: directory 
+    dest: "/etc/zabbix/externalscripts" 
+    owner: zabbix 
+    group: root 
+    mode: 0770
+  when: zabbix_agent.install == 1
+  tags: zabbix-agent-confi
+

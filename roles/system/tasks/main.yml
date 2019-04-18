@@ -1,0 +1,150 @@
+---
+- name: SERVER | Disable SELinux
+  selinux: 
+    policy: targeted 
+    state: disabled
+  tags: disable_selinux
+
+- name: SERVER | Install epel-release
+  become: true
+  yum:
+    name: epel-release
+    state: latest
+  when: server.system is defined and server.install == 1
+  tags: package_install
+
+- name: SERVER | Install System Packages
+  become: true
+  yum:
+    name: "{{ server.system }}"
+    state: latest
+  when: server.system is defined and server.install == 1
+  tags: package_install
+
+- name: SERVER | Install Extra Packages
+  become: true
+  yum:
+    name: "{{ server.extra }}"
+    state: latest
+  when: server.extra is defined and server.install == 1
+  tags: package_install
+
+- name: SERVER | Python3 get pip
+  become: yes 
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp/get-pip.py
+  tags: pip3
+
+- name: SERVER | Python3 install pip
+  become: yes
+  shell: python3.6 /tmp/get-pip.py
+  tags: pip3
+
+- name: SERVER | More Configure the timezone
+  become: true
+  file:
+    src: /usr/share/zoneinfo/{{server.timezone}}
+    dest: /etc/localtime
+    state: link
+    force: yes
+    backup: yes
+  when: server.timezone is defined and server.install == 1
+
+- name: SERVER | NTP sync
+  become: true
+  copy:
+    src: chrony.conf
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when: server.install == 1
+  notify: restart ntp
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: SERVER | Enable service ntp
+  become: true
+  service:
+    name: "chronyd"
+    enabled: yes
+  when: server.install == 1
+  tags: chrony
+
+- name: SERVER | Enable service ntp
+  become: true
+  service:
+    name: "syslog-ng"
+    enabled: yes
+  when: server.install == 1
+  tags: chrony
+
+- name: SERVER | Setup syslog-ng
+  become: true
+  copy:
+    src: syslog-ng.conf
+    dest: /etc/syslog-ng/syslog-ng.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when: server.install == 1
+  notify: restart syslog-ng
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: SERVER | sysctl
+  become: true
+  copy:
+    src: sysctl-99-custom.conf
+    dest: /etc/sysctl.d/99-custom.conf
+  when: server.sysctl == 1 and server.install == 1
+  notify: reload sysctl
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: Server | Firewalld Open SSH ports {{ server.ssh_port }}
+  become: true
+  firewalld: 
+    port: "{{ server.ssh_port }}/tcp"
+    permanent: true 
+    state: enabled
+  when: server.install == 1
+  notify: firewalld restart
+
+- name: Server | Setup Firewalld
+  become: true
+  firewalld: 
+    port: "{{ item }}"
+    permanent: true 
+    state: enabled
+  with_items:
+    - 22/tcp
+    - 80/tcp
+    - 443/tcp
+    - 10050/tcp
+  when: server.install == 1
+  notify: firewalld restart
+
+- name: flush_handlers
+  meta: flush_handlers
+
+- name: Server | Settings SSH 
+  become: true
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+  when: server.ssh_port is defined and server.install == 1
+  notify: restart sshd
+
+- name: flush_handlers
+  meta: flush_handlers

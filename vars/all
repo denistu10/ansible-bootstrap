@@ -1,0 +1,23 @@
+---
+server:
+  install: 1
+  dist_upgrade: 1
+  system: [bind-utils, net-tools, vim, mc, htop, atop, curl, wget, python2-pip, python36, python36-pip, iptables-services, yum-utils, subscription-manager, chrony, syslog-ng]
+  extra: [unzip, pv, ncdu,]
+  timezone: "Europe/Moscow"
+  locale: "en_US.UTF-8"
+  sysctl: 1
+  ssh_port: 2288
+sssd:
+  install: 0
+  package: [realmd, sssd, oddjob, oddjob-mkhomedir, adcli, samba-common, samba-common-tools]
+  domain: DOSTAEVSKY.RU
+  user: userlinux
+  password: 7SiQofK6MMv4
+zabbix_agent:
+  install: 0
+  ipaddr: 192.168.213.159
+  zbx_version: 3.4 
+  zbx_version_packet: 3.4.15-1
+
+
