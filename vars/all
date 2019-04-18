@@ -9,13 +9,13 @@ server:
   sysctl: 1
   ssh_port: 2288
 sssd:
-  install: 0
+  install: 1
   package: [realmd, sssd, oddjob, oddjob-mkhomedir, adcli, samba-common, samba-common-tools]
   domain: DOSTAEVSKY.RU
   user: userlinux
   password: 7SiQofK6MMv4
 zabbix_agent:
-  install: 0
+  install: 1
   ipaddr: 192.168.213.159
   zbx_version: 3.4 
   zbx_version_packet: 3.4.15-1
