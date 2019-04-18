@@ -7,7 +7,7 @@ server:
   timezone: "Europe/Moscow"
   locale: "en_US.UTF-8"
   sysctl: 1
-  ssh_port: 2288
+  ssh_port: 2277
 sssd:
   install: 1
   package: [realmd, sssd, oddjob, oddjob-mkhomedir, adcli, samba-common, samba-common-tools]
